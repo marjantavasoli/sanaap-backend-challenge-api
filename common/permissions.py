@@ -12,11 +12,11 @@ class IsAdmin(BasePermission):
 class DocumentAccessPolicy(BasePermission):
     def has_permission(self, request: Request, view: APIView) -> bool:
         user = request.user
-        if user.is_superuser:
-            return True
-
         if not (user and user.is_authenticated):
             return False
+
+        if user.is_superuser:
+            return True
 
         if request.method in SAFE_METHODS:
             return True
