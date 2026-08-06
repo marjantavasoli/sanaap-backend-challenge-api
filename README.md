@@ -44,3 +44,34 @@ A health check is exposed at http://localhost:8000/api/health/.
 ```bash
 pytest
 ```
+## Authentication
+
+The API uses JWT (via `djangorestframework-simplejwt`).
+
+```bash
+# Obtain a token pair
+curl -X POST http://localhost:8000/api/auth/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "<user>", "password": "<pass>"}'
+
+# Use the access token on protected endpoints
+curl http://localhost:8000/api/... \
+  -H "Authorization: Bearer <access-token>"
+
+# Refresh an expired access token
+curl -X POST http://localhost:8000/api/auth/token/refresh/ \
+  -H "Content-Type: application/json" \
+  -d '{"refresh": "<refresh-token>"}'
+```
+
+### Roles
+
+Every user has one role, managed by an admin in the Django admin:
+
+| Role     | Documents access                     |
+|----------|--------------------------------------|
+| `admin`  | Full access + user/role management   |
+| `editor` | Upload and update (no delete)        |
+| `viewer` | Read only                            |
+
+Create the first admin with `python manage.py createsuperuser`
