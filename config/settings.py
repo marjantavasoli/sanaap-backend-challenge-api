@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'common',
     'accounts',
+    'documents',
 ]
 
 MIDDLEWARE = [
@@ -99,6 +100,16 @@ else:
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         }
     }
+
+# Object storage (MinIO / S3-compatible) for documents
+MINIO_ENDPOINT = env("MINIO_ENDPOINT", default="")
+MINIO_ACCESS_KEY = env("MINIO_ACCESS_KEY", default="")
+MINIO_SECRET_KEY = env("MINIO_SECRET_KEY", default="")
+MINIO_BUCKET = env("MINIO_BUCKET", default="documents")
+MINIO_USE_SSL = env.bool("MINIO_USE_SSL", default=False)
+
+# Lifetime (in seconds) of the presigned URLs handed out for documents.
+DOCUMENT_URL_EXPIRY = env.int("DOCUMENT_URL_EXPIRY", default=300)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
