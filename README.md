@@ -126,6 +126,46 @@ The `documents` bucket is created automatically on startup by the
 > against the `minio` hostname (e.g. `http://minio:9000/...`). To open such a
 > link from your host browser, add `127.0.0.1 minio` to your `/etc/hosts`.
 > This only affects local development.
+## Documents API
+
+All endpoints require a valid JWT (`Authorization: Bearer <access>`).
+
+| Method | Endpoint                | Min. role | Action                    |
+|--------|-------------------------|-----------|---------------------------|
+| GET    | `/api/documents/`       | viewer    | List documents            |
+| GET    | `/api/documents/{id}/`  | viewer    | Retrieve one document      |
+| POST   | `/api/documents/`       | editor    | Upload a document         |
+| PUT/PATCH | `/api/documents/{id}/` | editor  | Update a document          |
+| DELETE | `/api/documents/{id}/`  | admin     | Delete a document          |
+
+Uploads are `multipart/form-data` with `title` and `file` fields. Responses
+never include the raw file path — only a short-lived presigned `download_url`.
+
+### Filtering, ordering & pagination
+
+```bash
+# Filter by title (case-insensitive, partial match)
+GET /api/documents/?title=report
+
+# Filter by creation date range
+GET /api/documents/?created_after=2025-01-01&created_before=2025-12-31
+
+# Order by a field (prefix with "-" for descending)
+GET /api/documents/?ordering=title
+GET /api/documents/?ordering=-created_at
+
+# Paginate (10 per page)
+GET /api/documents/?page=2
+```
+
+Example upload:
+
+```bash
+curl -X POST http://localhost:8000/api/documents/ \
+  -H "Authorization: Bearer <access-token>" \
+  -F "title=Q4 Report" \
+  -F "file=@/path/to/report.pdf"
+```
 
 ### Roles
 
