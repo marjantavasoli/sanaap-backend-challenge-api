@@ -113,6 +113,19 @@ curl -X POST http://localhost:8000/api/auth/token/refresh/ \
   -H "Content-Type: application/json" \
   -d '{"refresh": "<refresh-token>"}'
 ```
+## Object storage
+
+Documents are stored in MinIO (S3-compatible) in a **private** bucket. The
+API never exposes objects directly — it hands out short-lived **presigned
+URLs** (default 5 minutes, configurable via `DOCUMENT_URL_EXPIRY`).
+
+The `documents` bucket is created automatically on startup by the
+`createbuckets` service.
+
+> **Dev note — presigned URL host.** Inside Docker, the app signs URLs
+> against the `minio` hostname (e.g. `http://minio:9000/...`). To open such a
+> link from your host browser, add `127.0.0.1 minio` to your `/etc/hosts`.
+> This only affects local development.
 
 ### Roles
 
