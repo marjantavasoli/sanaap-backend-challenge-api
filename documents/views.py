@@ -1,4 +1,6 @@
+from rest_framework.parsers import FormParser, MultiPartParser
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from rest_framework import filters, viewsets
 
 from common.permissions import DocumentAccessPolicy
@@ -6,7 +8,7 @@ from .filters import DocumentFilter
 from .models import Document
 from .serializers import DocumentSerializer
 
-
+@extend_schema(tags=["documents"])
 class DocumentViewSet(viewsets.ModelViewSet):
     """CRUD API for documents."""
 
