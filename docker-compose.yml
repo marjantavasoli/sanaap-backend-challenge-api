@@ -45,7 +45,7 @@ services:
   # un-migrated database. Reuses the same image as `web` (no separate build).
   migrate:
     build: .
-    command: python manage.py migrate --noinput
+    entrypoint: ["python", "manage.py", "migrate", "--noinput"]
     environment:
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG}
