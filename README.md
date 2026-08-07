@@ -19,19 +19,69 @@ permissions, and the full stack runs under Docker Compose.
 - Docker & Docker Compose (for the full stack)
 
 ## Local setup
+## Running with Docker (recommended)
+
+The full stack — Django, PostgreSQL, Redis, and MinIO — runs under Docker
+Compose.
+
+### Prerequisites
+
+- Docker and Docker Compose
+
+### Steps
 
 ```bash
-# 1. Create and activate a virtualenv
+# 1. Create your env file and edit the secrets
+cp .env.example .env
+#    -> set a strong SECRET_KEY
+
+# 2. Build and start the stack
+docker compose up --build
+```
+
+On startup, a dedicated `migrate` service applies database migrations and
+exits; the `web` service starts only after migrations finish. Once the
+stack is up:
+
+- API: http://localhost:8000/api/
+- Health check: http://localhost:8000/api/health/
+- MinIO console: http://localhost:9001 (log in with the MinIO credentials)
+
+### Data persistence
+
+PostgreSQL and MinIO store their data in named Docker volumes
+(`postgres_data`, `minio_data`). This data survives `docker compose down`
+and image rebuilds. To wipe it, run `docker compose down -v`.
+
+### Create the first admin user
+
+```bash
+docker compose exec web python manage.py createsuperuser
+```
+
+Superusers are assigned the `admin` role automatically.
+
+### Services
+
+| Service  | Image           | Port(s)      | Purpose                     |
+|----------|-----------------|--------------|-----------------------------|
+| web      | (built locally) | 8000         | Django API                  |
+| migrate  | (built locally) | —            | Runs migrations, then exits |
+| db       | postgres:16     | 5432         | Database                    |
+| redis    | redis:7         | 6379         | Cache                       |
+| minio    | minio/minio     | 9000, 9001   | Object storage              |
+
+> The `web` service runs Django's development server. A production-grade
+> app server (Gunicorn) and reverse proxy (Nginx) are added in a later
+> branch.
+
+## Running locally without Docker
+
+```bash
 python -m venv .venv
 source .venv/bin/activate
-
-# 2. Install dependencies
 pip install -r requirements-dev.txt
-
-# 3. Create your local env file
-cp .env.example .env
-
-# 4. Apply migrations and start the dev server
+cp .env.example .env          
 python manage.py migrate
 python manage.py runserver
 ```
