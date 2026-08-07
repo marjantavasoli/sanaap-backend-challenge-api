@@ -1,28 +1,27 @@
 # Sanaap Document Management API
 
 A secure document management service built with Django REST Framework.
-Documents are stored in MinIO, access is controlled with role-based
+Documents are stored in MinIO, access is controlled with JWT + role-based
 permissions, and the full stack runs under Docker Compose.
+
+## Features
+
+- JWT authentication (access / refresh)
+- Role-based access control: **admin**, **editor**, **viewer**
+- Secure document storage in MinIO with short-lived **presigned URLs**
+- Filtering, ordering, and pagination on the documents API
+- Interactive API docs (Swagger UI) via OpenAPI 3
+- Fully dockerized: Django, PostgreSQL, Redis, MinIO
 
 ## Tech stack
 
-- Python / Django 5 / Django REST Framework
-- JWT authentication (djangorestframework-simplejwt)
-- PostgreSQL (database)
-- Redis (cache)
-- MinIO (object storage)
+- Python 3.12 / Django 5 / Django REST Framework
+- SimpleJWT · django-filter · drf-spectacular
+- django-storages + boto3 (MinIO / S3)
+- PostgreSQL · Redis · MinIO
 - Docker & Docker Compose
 
-## Requirements
-
-- Python 3.12+
-- Docker & Docker Compose (for the full stack)
-
-## Local setup
 ## Running with Docker (recommended)
-
-The full stack — Django, PostgreSQL, Redis, and MinIO — runs under Docker
-Compose.
 
 ### Prerequisites
 
@@ -31,7 +30,7 @@ Compose.
 ### Steps
 
 ```bash
-# 1. Create your env file and edit the secrets
+# 1. Create your env file and set the secrets
 cp .env.example .env
 #    -> set a strong SECRET_KEY
 
@@ -39,19 +38,17 @@ cp .env.example .env
 docker compose up --build
 ```
 
-On startup, a dedicated `migrate` service applies database migrations and
-exits; the `web` service starts only after migrations finish. Once the
-stack is up:
+On startup a dedicated `migrate` service applies migrations and exits, a
+`createbuckets` service provisions the MinIO bucket, and the `web` service
+starts only after both finish.
 
-- API: http://localhost:8000/api/
+Once up:
+
+- API root: http://localhost:8000/api/
+- Swagger UI: http://localhost:8000/api/docs/
+- OpenAPI schema: http://localhost:8000/api/schema/
 - Health check: http://localhost:8000/api/health/
-- MinIO console: http://localhost:9001 (log in with the MinIO credentials)
-
-### Data persistence
-
-PostgreSQL and MinIO store their data in named Docker volumes
-(`postgres_data`, `minio_data`). This data survives `docker compose down`
-and image rebuilds. To wipe it, run `docker compose down -v`.
+- MinIO console: http://localhost:9001
 
 ### Create the first admin user
 
@@ -61,19 +58,25 @@ docker compose exec web python manage.py createsuperuser
 
 Superusers are assigned the `admin` role automatically.
 
+### Data persistence
+
+PostgreSQL and MinIO persist to named Docker volumes (`postgres_data`,
+`minio_data`), which survive `docker compose down` and rebuilds. To wipe
+them: `docker compose down -v`.
+
 ### Services
 
-| Service  | Image           | Port(s)      | Purpose                     |
-|----------|-----------------|--------------|-----------------------------|
-| web      | (built locally) | 8000         | Django API                  |
-| migrate  | (built locally) | —            | Runs migrations, then exits |
-| db       | postgres:16     | 5432         | Database                    |
-| redis    | redis:7         | 6379         | Cache                       |
-| minio    | minio/minio     | 9000, 9001   | Object storage              |
+| Service      | Image           | Port(s)     | Purpose                     |
+|--------------|-----------------|-------------|-----------------------------|
+| web          | (built locally) | 8000        | Django API                  |
+| migrate      | (built locally) | —           | Runs migrations, then exits |
+| createbuckets| minio/mc        | —           | Creates the bucket, exits   |
+| db           | postgres:16     | 5432        | Database                    |
+| redis        | redis:7         | 6379        | Cache                       |
+| minio        | minio/minio     | 9000, 9001  | Object storage              |
 
-> The `web` service runs Django's development server. A production-grade
-> app server (Gunicorn) and reverse proxy (Nginx) are added in a later
-> branch.
+> The `web` service runs Django's development server. A production app
+> server (Gunicorn) and reverse proxy (Nginx) are planned as a later branch.
 
 ## Running locally without Docker
 
@@ -81,19 +84,14 @@ Superusers are assigned the `admin` role automatically.
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
-cp .env.example .env          
+cp .env.example .env          # leave DATABASE_URL unset -> SQLite fallback
 python manage.py migrate
 python manage.py runserver
 ```
 
-The API is then available at http://localhost:8000/api/.
-A health check is exposed at http://localhost:8000/api/health/.
+> Without MinIO configured, storage calls won't reach a backend — use the
+> Docker stack for full document upload/download.
 
-## Running the tests
-
-```bash
-pytest
-```
 ## Authentication
 
 The API uses JWT (via `djangorestframework-simplejwt`).
@@ -105,7 +103,7 @@ curl -X POST http://localhost:8000/api/auth/token/ \
   -d '{"username": "<user>", "password": "<pass>"}'
 
 # Use the access token on protected endpoints
-curl http://localhost:8000/api/... \
+curl http://localhost:8000/api/documents/ \
   -H "Authorization: Bearer <access-token>"
 
 # Refresh an expired access token
@@ -113,30 +111,28 @@ curl -X POST http://localhost:8000/api/auth/token/refresh/ \
   -H "Content-Type: application/json" \
   -d '{"refresh": "<refresh-token>"}'
 ```
-## Object storage
 
-Documents are stored in MinIO (S3-compatible) in a **private** bucket. The
-API never exposes objects directly — it hands out short-lived **presigned
-URLs** (default 5 minutes, configurable via `DOCUMENT_URL_EXPIRY`).
+### Roles
 
-The `documents` bucket is created automatically on startup by the
-`createbuckets` service.
+Every user has one role, managed by an admin in the Django admin:
 
-> **Dev note — presigned URL host.** Inside Docker, the app signs URLs
-> against the `minio` hostname (e.g. `http://minio:9000/...`). To open such a
-> link from your host browser, add `127.0.0.1 minio` to your `/etc/hosts`.
-> This only affects local development.
+| Role     | Documents access                     |
+|----------|--------------------------------------|
+| `admin`  | Full access + user/role management   |
+| `editor` | Upload and update (no delete)        |
+| `viewer` | Read only                            |
+
 ## Documents API
 
 All endpoints require a valid JWT (`Authorization: Bearer <access>`).
 
-| Method | Endpoint                | Min. role | Action                    |
-|--------|-------------------------|-----------|---------------------------|
-| GET    | `/api/documents/`       | viewer    | List documents            |
-| GET    | `/api/documents/{id}/`  | viewer    | Retrieve one document      |
-| POST   | `/api/documents/`       | editor    | Upload a document         |
-| PUT/PATCH | `/api/documents/{id}/` | editor  | Update a document          |
-| DELETE | `/api/documents/{id}/`  | admin     | Delete a document          |
+| Method    | Endpoint               | Min. role | Action              |
+|-----------|------------------------|-----------|---------------------|
+| GET       | `/api/documents/`      | viewer    | List documents      |
+| GET       | `/api/documents/{id}/` | viewer    | Retrieve a document |
+| POST      | `/api/documents/`      | editor    | Upload a document   |
+| PUT/PATCH | `/api/documents/{id}/` | editor    | Update a document   |
+| DELETE    | `/api/documents/{id}/` | admin     | Delete a document   |
 
 Uploads are `multipart/form-data` with `title` and `file` fields. Responses
 never include the raw file path — only a short-lived presigned `download_url`.
@@ -152,7 +148,6 @@ GET /api/documents/?created_after=2025-01-01&created_before=2025-12-31
 
 # Order by a field (prefix with "-" for descending)
 GET /api/documents/?ordering=title
-GET /api/documents/?ordering=-created_at
 
 # Paginate (10 per page)
 GET /api/documents/?page=2
@@ -167,14 +162,29 @@ curl -X POST http://localhost:8000/api/documents/ \
   -F "file=@/path/to/report.pdf"
 ```
 
-### Roles
+> **Dev note — presigned URL host.** Inside Docker, the app signs URLs
+> against the `minio` hostname (e.g. `http://minio:9000/...`). To open such a
+> link from your host browser, add `127.0.0.1 minio` to your `/etc/hosts`.
 
-Every user has one role, managed by an admin in the Django admin:
+## Running the tests
 
-| Role     | Documents access                     |
-|----------|--------------------------------------|
-| `admin`  | Full access + user/role management   |
-| `editor` | Upload and update (no delete)        |
-| `viewer` | Read only                            |
+```bash
+pytest
+```
 
-Create the first admin with `python manage.py createsuperuser`
+The suite runs fully offline — no MinIO or Redis required (in-memory
+fallbacks are used).
+
+## Project structure
+
+```
+.
+├── config/          # Settings, URLs, WSGI/ASGI
+├── accounts/        # Custom user model, roles, JWT endpoints
+├── common/          # Shared permissions, health check
+├── documents/       # Document model, storage, API
+├── tests/           # Test suite, mirrors the app layout
+├── docker-compose.yml
+├── Dockerfile
+└── manage.py
+```
