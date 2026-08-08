@@ -137,6 +137,30 @@ All endpoints require a valid JWT (`Authorization: Bearer <access>`).
 Uploads are `multipart/form-data` with `title` and `file` fields. Responses
 never include the raw file path — only a short-lived presigned `download_url`.
 
+
+## Audit logging
+
+Every document action — create, update, delete, list, and retrieve — is
+recorded to an immutable audit log capturing the actor, the action, and the
+document (id + title). All writes go through a single audit **service**
+(`documents/services.py`), and are best-effort: if a log write fails, the
+original request still succeeds.
+
+Admins can query the trail:
+
+```bash
+GET /api/audit-logs/                     # all entries (admin only)
+GET /api/audit-logs/?actor=<user-id>
+GET /api/audit-logs/?action=delete
+GET /api/audit-logs/?document_id=<id>
+```
+
+Delete entries deliberately retain the document's id and title, so the
+history remains meaningful after a document is removed. The log is also
+viewable (read-only) in the Django admin.
+
+
+
 ### Filtering, ordering & pagination
 
 ```bash

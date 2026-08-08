@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Document
+from .models import AuditLog,Document
 
 
 class DocumentSerializer(serializers.ModelSerializer):
@@ -26,3 +26,19 @@ class DocumentSerializer(serializers.ModelSerializer):
 
     def get_download_url(self, obj) -> str:
         return obj.presigned_url
+
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    actor = serializers.ReadOnlyField(source="actor.username")
+
+    class Meta:
+        model = AuditLog
+        fields = [
+            "id",
+            "actor",
+            "action",
+            "document_id",
+            "document_title",
+            "created_at",
+        ]

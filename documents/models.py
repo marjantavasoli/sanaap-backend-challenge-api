@@ -33,3 +33,39 @@ class Document(models.Model):
     def presigned_url(self) -> str:
         """Short-lived signed URL for downloading this document."""
         return self.file.url
+
+
+
+class AuditLog(models.Model):
+    """Immutable record of an action taken against a document."""
+
+    class Action(models.TextChoices):
+        CREATE = "create", "Create"
+        UPDATE = "update", "Update"
+        DELETE = "delete", "Delete"
+        RETRIEVE = "retrieve", "Retrieve"
+        LIST = "list", "List"
+        DOWNLOAD = "download", "Download"
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="audit_logs",
+    )
+    action = models.CharField(max_length=10, choices=Action.choices)
+    # Kept as a plain id (not a FK) so a log entry survives the document's
+    document_id = models.PositiveBigIntegerField(null=True, blank=True)
+    document_title = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["actor", "created_at"]),
+            models.Index(fields=["document_id"]),
+        ]
+
+    def __str__(self) -> str:
+        actor = self.actor.username if self.actor else "anonymous"
+        return f"{actor} {self.action} doc#{self.document_id}"
