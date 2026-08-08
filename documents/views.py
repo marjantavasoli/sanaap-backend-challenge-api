@@ -3,10 +3,10 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import filters, viewsets
 from rest_framework.parsers import FormParser, MultiPartParser
 
-from common.permissions import DocumentAccessPolicy
+from common.permissions import DocumentAccessPolicy,IsAdmin
 from .filters import DocumentFilter
 from .models import AuditLog, Document
-from .serializers import DocumentSerializer
+from .serializers import DocumentSerializer,AuditLogSerializer
 from .services import record_document_audit
 
 
@@ -60,3 +60,16 @@ class DocumentViewSet(viewsets.ModelViewSet):
         response = super().list(request, *args, **kwargs)
         record_document_audit(request.user, AuditLog.Action.LIST)
         return response
+
+
+@extend_schema(tags=["audit-logs"])
+class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only access to the audit trail. Admins only."""
+
+    serializer_class = AuditLogSerializer
+    permission_classes = [IsAdmin]
+    queryset = AuditLog.objects.select_related("actor").all()
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ["actor", "action", "document_id"]
+    ordering_fields = ["created_at"]
+    ordering = ["-created_at"]
