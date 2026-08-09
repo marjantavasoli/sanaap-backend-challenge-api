@@ -1,14 +1,20 @@
+import uuid
+
 from rest_framework import serializers
 
-from .models import AuditLog,Document
+from .models import AuditLog, Document
 
 
 class DocumentSerializer(serializers.ModelSerializer):
-    """Serializer for reading and writing documents."""
+    """Read + create serializer for documents.
 
+    On create the client sends only ``title``; the response includes a
+    presigned ``upload_url`` the client PUTs the file to. ``file`` is never
+    uploaded through Django.
+    """
 
-    file = serializers.FileField(write_only=True)
     download_url = serializers.SerializerMethodField()
+    upload_url = serializers.SerializerMethodField()
     owner = serializers.ReadOnlyField(source="owner.username")
 
     class Meta:
@@ -16,16 +22,44 @@ class DocumentSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "title",
-            "file",
+            "status",
+            "size",
+            "content_type",
             "download_url",
+            "upload_url",
             "owner",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "owner", "created_at", "updated_at"]
+        read_only_fields = [
+            "id", "status", "size", "content_type",
+            "owner", "created_at", "updated_at",
+        ]
 
     def get_download_url(self, obj) -> str:
-        return obj.presigned_url
+        # Only meaningful once the object exists (ready).
+        return obj.presigned_url if obj.status == Document.Status.READY else ""
+
+    def get_upload_url(self, obj) -> str:
+        # Populated by the view immediately after create; not stored.
+        return getattr(obj, "_upload_url", "")
+
+    def create(self, validated_data):
+        owner = self.context["request"].user
+        # Namespace the key by owner so the webhook can recover ownership,
+        # and add a uuid so keys are unique and unguessable.
+        filename = validated_data["title"]
+        key = f"documents/{owner.id}/{uuid.uuid4()}/{filename}"
+
+        document = Document.objects.create(
+            owner=owner,
+            title=validated_data["title"],
+            file=key,
+            status=Document.Status.PENDING,
+        )
+        # Attach the presigned PUT URL for the response (not persisted).
+        document._upload_url = document.file.storage.presigned_put_url(key)
+        return document
 
 
 

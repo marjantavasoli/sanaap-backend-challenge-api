@@ -26,7 +26,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return Document.objects.select_related("owner").all()
 
     def perform_create(self, serializer):
-        document = serializer.save(owner=self.request.user)
+        document = serializer.save()
         record_document_audit(
             self.request.user, AuditLog.Action.CREATE, document=document
         )
