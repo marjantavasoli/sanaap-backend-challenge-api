@@ -1,0 +1,44 @@
+import logging
+
+from django.conf import settings
+from rest_framework import status
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
+from rest_framework.permissions import AllowAny
+from rest_framework.request import Request
+from rest_framework.response import Response
+
+from .models import Document
+from .tasks import process_document
+
+logger = logging.getLogger(__name__)
+
+
+@api_view(["POST"])
+@authentication_classes([])          # MinIO is machine-to-machine, no JWT.
+@permission_classes([AllowAny])
+def minio_upload_hook(request: Request) -> Response:
+    """Receive MinIO ObjectCreated events and enqueue processing."""
+    provided = request.headers.get("X-Webhook-Key", "")
+    if not settings.MINIO_WEBHOOK_KEY or provided != settings.MINIO_WEBHOOK_KEY:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    # MinIO S3 event: records[].s3.object.key identifies the uploaded object.
+    records = request.data.get("Records", [])
+    enqueued = 0
+    for record in records:
+        try:
+            key = record["s3"]["object"]["key"]
+        except (KeyError, TypeError):
+            continue
+
+        # Match the pending document by its stored key, then process it.
+        document = Document.objects.filter(file=key).first()
+        if document is not None:
+            process_document.delay(document.id)
+            enqueued += 1
+
+    return Response({"enqueued": enqueued}, status=status.HTTP_200_OK)

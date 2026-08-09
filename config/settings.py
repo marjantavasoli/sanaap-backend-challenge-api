@@ -119,6 +119,7 @@ MINIO_ACCESS_KEY = env("MINIO_ACCESS_KEY", default="")
 MINIO_SECRET_KEY = env("MINIO_SECRET_KEY", default="")
 MINIO_BUCKET = env("MINIO_BUCKET", default="documents")
 MINIO_USE_SSL = env.bool("MINIO_USE_SSL", default=False)
+MINIO_WEBHOOK_KEY = env("MINIO_WEBHOOK_KEY", default="")
 
 # Lifetime (in seconds) of the presigned URLs handed out for documents.
 DOCUMENT_URL_EXPIRY = env.int("DOCUMENT_URL_EXPIRY", default=300)
