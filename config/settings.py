@@ -103,6 +103,15 @@ else:
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         }
     }
+# Celery
+# ---------------------------------------------------------------------------
+# Broker/result backend default to the same Redis used for caching. In tests
+# (no REDIS_URL), tasks run eagerly and synchronously, so no worker/broker
+# is needed.
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=REDIS_URL or "memory://")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default=REDIS_URL or "cache+memory://")
+CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=not bool(REDIS_URL))
+CELERY_TASK_EAGER_PROPAGATES = True
 
 # Object storage (MinIO / S3-compatible) for documents
 MINIO_ENDPOINT = env("MINIO_ENDPOINT", default="")
