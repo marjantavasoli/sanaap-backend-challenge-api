@@ -10,16 +10,29 @@ def document_upload_path(instance, filename: str) -> str:
 
 
 class Document(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        READY = "ready", "Ready"
+
     title = models.CharField(max_length=255)
     file = models.FileField(
         storage=get_document_storage,
         upload_to=document_upload_path,
+        max_length=512,
+        blank=True,
     )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="documents",
     )
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    size = models.PositiveBigIntegerField(null=True, blank=True)
+    content_type = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -32,7 +45,7 @@ class Document(models.Model):
     @property
     def presigned_url(self) -> str:
         """Short-lived signed URL for downloading this document."""
-        return self.file.url
+        return self.file.url if self.file else ""
 
 
 
