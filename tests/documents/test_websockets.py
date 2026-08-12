@@ -6,7 +6,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from accounts.models import User
 from common.websocket_authentication import JWTWebsocketAuthenticationMiddleware
-from documents.ws_notificatins import notify_document_event
+from documents.ws_notifications import notify_document_event
 from documents.ws_routing import websocket_urlpatterns
 
 # Build the same middleware stack the ASGI app uses, so tests exercise auth.

@@ -3,7 +3,7 @@ import logging
 from django.contrib.auth.models import AnonymousUser
 
 from documents.models import AuditLog
-from documents.ws_notificatins import notify_document_event
+from documents.ws_notifications import notify_document_event
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,6 @@ class DocumentService:
         self._record_audit(actor, AuditLog.Action.RETRIEVE, document=document)
 
     def mark_ready(self, document):
-        # The upload finished processing; audit as CREATE (finalize) + notify.
         notify_document_event(
             "ready",
             document_id=document.id,
