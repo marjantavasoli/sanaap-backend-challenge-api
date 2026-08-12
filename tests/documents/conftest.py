@@ -4,7 +4,6 @@ from django.core.files.storage import InMemoryStorage
 from documents.models import Document
 
 
-
 class FakeDocumentStorage(InMemoryStorage):
     """In-memory storage that also fakes the presigned PUT URL, so direct-
     upload tests run without MinIO."""

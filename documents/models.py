@@ -48,7 +48,6 @@ class Document(models.Model):
         return self.file.url if self.file else ""
 
 
-
 class AuditLog(models.Model):
     """Immutable record of an action taken against a document."""
 

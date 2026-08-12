@@ -85,6 +85,7 @@ def test_only_admin_can_read_audit_logs(auth_client, admin_user, viewer_user):
 @pytest.mark.django_db
 def test_service_normalizes_anonymous_actor():
     from django.contrib.auth.models import AnonymousUser
+
     from documents.services import DocumentService
 
     DocumentService().record_list_access(AnonymousUser())

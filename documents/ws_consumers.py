@@ -7,7 +7,8 @@ DOCUMENTS_GROUP = "documents"
 
 class DocumentNotifyConsumer(AsyncJsonWebsocketConsumer):
     """
-    Pushes document lifecycle events (created/updated/ready/deleted) to connected, authenticated clients.
+    Pushes document lifecycle events (created/updated/ready/deleted) to connected,
+    authenticated clients.
     """
 
     async def connect(self):

@@ -19,9 +19,7 @@ def test_document_str_returns_title():
 @pytest.mark.django_db
 def test_document_is_linked_to_owner():
     owner = User.objects.create_user(username="alice", password="pw")
-    document = Document.objects.create(
-        title="Report", file="documents/1/report.pdf", owner=owner
-    )
+    document = Document.objects.create(title="Report", file="documents/1/report.pdf", owner=owner)
 
     assert document.owner == owner
     assert list(owner.documents.all()) == [document]

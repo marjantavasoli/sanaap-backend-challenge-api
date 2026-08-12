@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @api_view(["POST"])
-@authentication_classes([])          # MinIO is machine-to-machine, no JWT.
+@authentication_classes([])
 @permission_classes([AllowAny])
 def minio_upload_hook(request: Request) -> Response:
     """Receive MinIO ObjectCreated events and enqueue processing."""

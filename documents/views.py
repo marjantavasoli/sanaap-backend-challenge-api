@@ -2,10 +2,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import filters, viewsets
 
-from common.permissions import DocumentAccessPolicy,IsAdmin
+from common.permissions import DocumentAccessPolicy, IsAdmin
 from documents.filters import DocumentFilter
 from documents.models import AuditLog, Document
-from documents.serializers import DocumentSerializer,AuditLogSerializer
+from documents.serializers import AuditLogSerializer, DocumentSerializer
 from documents.services import DocumentService
 
 

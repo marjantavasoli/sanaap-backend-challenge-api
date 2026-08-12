@@ -54,18 +54,15 @@ def test_viewer_can_list_documents(auth_client, viewer_user, editor_user):
 def test_viewer_cannot_create_document(auth_client, viewer_user):
     client = auth_client(viewer_user)
 
-    response = client.post(
-        reverse("document-list"), {"title": "Nope"}, format="json"
-    )
+    response = client.post(reverse("document-list"), {"title": "Nope"}, format="json")
 
     assert response.status_code == 403
     assert Document.objects.count() == 0
 
+
 @pytest.mark.django_db
 def test_editor_can_update_document_title(auth_client, editor_user):
-    document = Document.objects.create(
-        title="Old", file="documents/1/a.pdf", owner=editor_user
-    )
+    document = Document.objects.create(title="Old", file="documents/1/a.pdf", owner=editor_user)
     client = auth_client(editor_user)
 
     response = client.patch(
@@ -81,9 +78,7 @@ def test_editor_can_update_document_title(auth_client, editor_user):
 
 @pytest.mark.django_db
 def test_editor_cannot_delete_document(auth_client, editor_user):
-    document = Document.objects.create(
-        title="Doc", file="documents/1/a.pdf", owner=editor_user
-    )
+    document = Document.objects.create(title="Doc", file="documents/1/a.pdf", owner=editor_user)
     client = auth_client(editor_user)
 
     response = client.delete(reverse("document-detail", args=[document.id]))
@@ -95,8 +90,10 @@ def test_editor_cannot_delete_document(auth_client, editor_user):
 @pytest.mark.django_db
 def test_admin_can_delete_document(auth_client, admin_user):
     document = Document.objects.create(
-        owner=admin_user, title="Doc",
-        file="documents/1/abc/doc.pdf", status=Document.Status.READY,
+        owner=admin_user,
+        title="Doc",
+        file="documents/1/abc/doc.pdf",
+        status=Document.Status.READY,
     )
     client = auth_client(admin_user)
     response = client.delete(reverse("document-detail", args=[document.id]))
