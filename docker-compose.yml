@@ -107,6 +107,7 @@ services:
     environment:
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS}
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0

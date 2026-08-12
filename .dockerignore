@@ -11,3 +11,5 @@ htmlcov
 .env
 .idea
 .vscode
+data
+staticfiles
