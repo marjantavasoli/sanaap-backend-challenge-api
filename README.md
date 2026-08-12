@@ -46,11 +46,10 @@ cp .env.example .env
 docker compose up --build
 ```
 
-On startup, one-off services run and exit in order: `migrate` applies
-database migrations, `createbuckets` provisions the MinIO bucket, and
-`minio-events` registers the upload event notification. The long-running
-services (`web`, `worker`, `nginx`, `db`, `redis`, `minio`) start once their
-dependencies are ready.
+On startup, one-off services run and exit: `migrate` applies database
+migrations, and `minio-init` provisions the MinIO bucket and registers the
+upload event notification. The long-running services (`web`, `worker`,
+`nginx`, `db`, `redis`, `minio`) start once their dependencies are ready.
 
 Once up (everything is served through Nginx on port 80):
 
@@ -83,8 +82,7 @@ them: `docker compose down -v`.
 | web           | (built locally) | (internal)  | Django API (Gunicorn/Uvicorn, ASGI) |
 | worker        | (built locally) | —           | Celery worker (upload processing)   |
 | migrate       | (built locally) | —           | Runs migrations, then exits         |
-| createbuckets | minio/mc        | —           | Creates the bucket, then exits      |
-| minio-events  | minio/mc        | —           | Registers MinIO event, then exits   |
+| minio-init    | minio/mc        | —           | Creates the bucket + registers the upload event, then exits |
 | db            | postgres:16     | 5432        | Database                            |
 | redis         | redis:7         | 6379        | Cache, Celery broker, channel layer |
 | minio         | minio/minio     | 9000, 9001  | Object storage                      |
