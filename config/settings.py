@@ -29,7 +29,6 @@ DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -80,8 +79,6 @@ ASGI_APPLICATION = "config.asgi.application"
 
 
 # Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
 DATABASES = {
     "default": env.db(
         "DATABASE_URL",
@@ -103,15 +100,13 @@ else:
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         }
     }
+
 # Celery
-# ---------------------------------------------------------------------------
-# Broker/result backend default to the same Redis used for caching. In tests
-# (no REDIS_URL), tasks run eagerly and synchronously, so no worker/broker
-# is needed.
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=REDIS_URL or "memory://")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default=REDIS_URL or "cache+memory://")
 CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=not bool(REDIS_URL))
 CELERY_TASK_EAGER_PROPAGATES = True
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 # Object storage (MinIO / S3-compatible) for documents
 MINIO_ENDPOINT = env("MINIO_ENDPOINT", default="")
@@ -124,8 +119,6 @@ MINIO_WEBHOOK_KEY = env("MINIO_WEBHOOK_KEY", default="")
 # Lifetime (in seconds) of the presigned URLs handed out for documents.
 DOCUMENT_URL_EXPIRY = env.int("DOCUMENT_URL_EXPIRY", default=300)
 
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -143,9 +136,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -155,13 +145,9 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

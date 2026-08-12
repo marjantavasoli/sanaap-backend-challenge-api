@@ -9,3 +9,5 @@ boto3==1.35.76
 django-filter==24.3
 drf-spectacular==0.28.0
 celery==5.4.0
+gunicorn==23.0.0
+uvicorn==0.34.0

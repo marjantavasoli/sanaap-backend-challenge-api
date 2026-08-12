@@ -42,12 +42,13 @@ On startup a dedicated `migrate` service applies migrations and exits, a
 `createbuckets` service provisions the MinIO bucket, and the `web` service
 starts only after both finish.
 
-Once up:
+Once up (everything is served through Nginx on port 80):
 
-- API root: http://localhost:8000/api/
-- Swagger UI: http://localhost:8000/api/docs/
-- OpenAPI schema: http://localhost:8000/api/schema/
-- Health check: http://localhost:8000/api/health/
+- API root: http://localhost/api/
+- Swagger UI: http://localhost/api/docs/
+- OpenAPI schema: http://localhost/api/schema/
+- Health check: http://localhost/api/health/
+- Django admin: http://localhost/admin/
 - MinIO console: http://localhost:9001
 
 ### Create the first admin user
@@ -68,7 +69,8 @@ them: `docker compose down -v`.
 
 | Service      | Image           | Port(s)     | Purpose                     |
 |--------------|-----------------|-------------|-----------------------------|
-| web          | (built locally) | 8000        | Django API                  |
+| web          | (built locally) | (internal)  | Django API (Gunicorn/Uvicorn, ASGI) |
+| nginx        | nginx:alpine    | 80          | Reverse proxy + static files        |
 | migrate      | (built locally) | —           | Runs migrations, then exits |
 | createbuckets| minio/mc        | —           | Creates the bucket, exits   |
 | db           | postgres:16     | 5432        | Database                    |
@@ -77,6 +79,24 @@ them: `docker compose down -v`.
 
 > The `web` service runs Django's development server. A production app
 > server (Gunicorn) and reverse proxy (Nginx) are planned as a later branch.
+
+### Serving architecture
+
+```
+client → Nginx (:80) → Gunicorn/Uvicorn (web:8000, ASGI) → Django
+```
+
+- **Gunicorn with Uvicorn workers** runs Django over ASGI (`config.asgi`),
+  so the same server handles HTTP today and WebSockets (Channels branch)
+  without changes.
+- **Nginx** is the only publicly exposed service. It reverse-proxies to the
+  app, serves `/static/` directly from a shared volume, and is already
+  configured to proxy WebSocket upgrades.
+- Static files are gathered at image build (`collectstatic`) into a volume
+  shared with Nginx.
+
+> HTTP only — TLS is out of scope for this challenge but would terminate at
+> the Nginx layer.
 
 ## Running locally without Docker
 
