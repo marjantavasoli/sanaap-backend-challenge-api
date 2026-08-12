@@ -1,7 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import filters, viewsets
-from rest_framework.parsers import FormParser, MultiPartParser
 
 from common.permissions import DocumentAccessPolicy,IsAdmin
 from .filters import DocumentFilter
@@ -16,7 +15,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
     serializer_class = DocumentSerializer
     permission_classes = [DocumentAccessPolicy]
-    parser_classes = [MultiPartParser, FormParser]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = DocumentFilter
     ordering_fields = ["created_at", "title"]
@@ -26,7 +24,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return Document.objects.select_related("owner").all()
 
     def perform_create(self, serializer):
-        document = serializer.save(owner=self.request.user)
+        document = serializer.save()
         record_document_audit(
             self.request.user, AuditLog.Action.CREATE, document=document
         )
