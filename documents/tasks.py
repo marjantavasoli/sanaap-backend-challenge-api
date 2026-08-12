@@ -2,8 +2,9 @@ import logging
 
 from celery import shared_task
 
-from .models import AuditLog, Document
-from .services import record_document_audit
+from documents.models import AuditLog, Document
+from documents.ws_notificatins import notify_document_event
+from documents.services import record_document_audit
 
 logger = logging.getLogger(__name__)
 
@@ -32,4 +33,10 @@ def process_document(document_id: int) -> None:
 
     record_document_audit(
         None, AuditLog.Action.CREATE, document=document
+    )
+    notify_document_event(
+        "ready",
+        document_id=document.id,
+        title=document.title,
+        status=document.status,
     )
