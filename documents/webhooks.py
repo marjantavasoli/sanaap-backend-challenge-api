@@ -11,8 +11,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from .models import Document
-from .tasks import process_document
+from documents.models import Document
+from documents.tasks import process_document
 
 logger = logging.getLogger(__name__)
 

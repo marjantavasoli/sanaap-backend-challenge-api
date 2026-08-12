@@ -2,7 +2,7 @@ import uuid
 
 from rest_framework import serializers
 
-from .models import AuditLog, Document
+from documents.models import AuditLog, Document
 
 
 class DocumentSerializer(serializers.ModelSerializer):
