@@ -18,7 +18,7 @@ def _get_user(user_id):
         return AnonymousUser()
 
 
-class JWTAuthMiddleware(BaseMiddleware):
+class JWTWebsocketAuthenticationMiddleware(BaseMiddleware):
     """
     Authenticate a WebSocket connection from a ?token=<access> query param.
     """
