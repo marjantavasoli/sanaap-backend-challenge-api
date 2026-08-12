@@ -17,7 +17,7 @@ def test_upload_creates_audit_log(auth_client, editor_user):
     client.post(
         reverse("document-list"),
         {"title": "Q4", "file": make_upload()},
-        format="multipart",
+        format="json",
     )
 
     log = AuditLog.objects.get(action=AuditLog.Action.CREATE)

@@ -10,21 +10,21 @@ def make_upload(name="report.pdf", content=b"data"):
 
 
 @pytest.mark.django_db
-def test_editor_can_upload_document(auth_client, editor_user):
+def test_editor_create_returns_pending_and_upload_url(auth_client, editor_user):
     client = auth_client(editor_user)
 
     response = client.post(
         reverse("document-list"),
-        {"title": "Marjan Report", "file": make_upload()},
-        format="multipart",
+        {"title": "Q4 Report"},
+        format="json",
     )
 
     assert response.status_code == 201
-    assert Document.objects.count() == 1
-    document = Document.objects.get()
+    assert response.data["status"] == "pending"
+    assert response.data["upload_url"].startswith("http://")
+    assert response.data["download_url"] == ""
+    document = Document.objects.get(id=response.data["id"])
     assert document.owner == editor_user
-    assert document.title == "Marjan Report"
-    assert response.data["download_url"].startswith("http://testserver/documents/")
 
 
 @pytest.mark.django_db
@@ -32,10 +32,9 @@ def test_owner_is_taken_from_request_not_payload(auth_client, editor_user, admin
     client = auth_client(editor_user)
     response = client.post(
         reverse("document-list"),
-        {"title": "X", "file": make_upload(), "owner": admin_user.id},
-        format="multipart",
+        {"title": "X", "owner": admin_user.id},  # try to forge owner
+        format="json",
     )
-
     assert response.status_code == 201
     assert Document.objects.get().owner == editor_user
 
@@ -52,18 +51,15 @@ def test_viewer_can_list_documents(auth_client, viewer_user, editor_user):
 
 
 @pytest.mark.django_db
-def test_viewer_cannot_upload_document(auth_client, viewer_user):
+def test_viewer_cannot_create_document(auth_client, viewer_user):
     client = auth_client(viewer_user)
 
     response = client.post(
-        reverse("document-list"),
-        {"title": "Nope", "file": make_upload()},
-        format="multipart",
+        reverse("document-list"), {"title": "Nope"}, format="json"
     )
 
     assert response.status_code == 403
     assert Document.objects.count() == 0
-
 
 @pytest.mark.django_db
 def test_editor_can_update_document_title(auth_client, editor_user):
@@ -98,16 +94,12 @@ def test_editor_cannot_delete_document(auth_client, editor_user):
 
 @pytest.mark.django_db
 def test_admin_can_delete_document(auth_client, admin_user):
-    client = auth_client(admin_user)
-    created = client.post(
-        reverse("document-list"),
-        {"title": "Doc", "file": make_upload()},
-        format="multipart",
+    document = Document.objects.create(
+        owner=admin_user, title="Doc",
+        file="documents/1/abc/doc.pdf", status=Document.Status.READY,
     )
-    document_id = created.data["id"]
-
-    response = client.delete(reverse("document-detail", args=[document_id]))
-
+    client = auth_client(admin_user)
+    response = client.delete(reverse("document-detail", args=[document.id]))
     assert response.status_code == 204
     assert Document.objects.count() == 0
 
