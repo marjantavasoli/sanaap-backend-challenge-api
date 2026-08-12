@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import AuditLog, Document
+from documents.models import AuditLog, Document
 
 
 @admin.register(Document)

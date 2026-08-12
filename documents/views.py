@@ -7,7 +7,6 @@ from documents.filters import DocumentFilter
 from documents.models import AuditLog, Document
 from documents.serializers import DocumentSerializer,AuditLogSerializer
 from documents.services import DocumentService
-from documents.ws_notificatins import notify_document_event
 
 
 @extend_schema(tags=["documents"])

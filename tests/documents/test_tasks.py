@@ -26,7 +26,7 @@ def test_process_document_missing_row_is_noop():
 
 
 @pytest.mark.django_db
-def test_process_document_writes_finalize_audit(editor_user):
+def test_process_document_does_not_write_audit(editor_user):
     document = Document.objects.create(
         owner=editor_user,
         title="report.pdf",
@@ -36,6 +36,6 @@ def test_process_document_writes_finalize_audit(editor_user):
 
     process_document(document.id)
 
-    assert AuditLog.objects.filter(
-        action=AuditLog.Action.CREATE, document_id=document.id
-    ).exists()
+    # Processing finalizes + notifies but writes NO audit row — the create
+    # was already audited at the API call.
+    assert AuditLog.objects.count() == 0

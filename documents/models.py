@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from .storages import get_document_storage
+from documents.storages import get_document_storage
 
 
 def document_upload_path(instance, filename: str) -> str:

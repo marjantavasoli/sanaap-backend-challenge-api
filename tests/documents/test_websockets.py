@@ -52,6 +52,8 @@ async def test_unauthenticated_client_is_rejected(settings):
     connected, _ = await communicator.connect()
     assert connected is False
 
+    await communicator.disconnect()
+
 
 from channels.db import database_sync_to_async
 

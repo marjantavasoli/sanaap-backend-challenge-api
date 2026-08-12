@@ -3,7 +3,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
 from documents.models import AuditLog, Document
-from documents.services import record_document_audit
 
 
 def make_upload(name="report.pdf", content=b"data"):
@@ -86,10 +85,9 @@ def test_only_admin_can_read_audit_logs(auth_client, admin_user, viewer_user):
 @pytest.mark.django_db
 def test_service_normalizes_anonymous_actor():
     from django.contrib.auth.models import AnonymousUser
+    from documents.services import DocumentService
 
-    log = record_document_audit(
-        AnonymousUser(), AuditLog.Action.LIST
-    )
+    DocumentService().record_list_access(AnonymousUser())
 
-    assert log is not None
+    log = AuditLog.objects.get(action=AuditLog.Action.LIST)
     assert log.actor is None

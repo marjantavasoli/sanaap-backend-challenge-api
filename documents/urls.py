@@ -1,7 +1,8 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from .views import DocumentViewSet,AuditLogViewSet
-from .webhooks import minio_upload_hook
+
+from documents.views import DocumentViewSet,AuditLogViewSet
+from documents.webhooks import minio_upload_hook
 
 
 router = DefaultRouter()
