@@ -255,6 +255,16 @@ The suite runs fully offline — no MinIO, Redis, or Celery worker required
 (in-memory fallbacks are used for the cache, channel layer, and task
 execution).
 
+## Linting & formatting
+
+The project uses [Ruff](https://docs.astral.sh/ruff/) for linting and
+formatting.
+
+```bash
+ruff format .      # format
+ruff check .       # lint
+```
+
 ## Project structure
 
 ```
