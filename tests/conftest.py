@@ -12,9 +12,7 @@ def api_client():
 @pytest.fixture
 def make_user(db):
     def _make(username, role, password="pw"):
-        return User.objects.create_user(
-            username=username, password=password, role=role
-        )
+        return User.objects.create_user(username=username, password=password, role=role)
 
     return _make
 

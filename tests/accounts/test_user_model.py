@@ -15,9 +15,7 @@ def test_new_user_defaults_to_viewer_role():
 
 @pytest.mark.django_db
 def test_role_properties_are_mutually_exclusive():
-    editor = User.objects.create_user(
-        username="bob", password="pw", role=User.Role.EDITOR
-    )
+    editor = User.objects.create_user(username="bob", password="pw", role=User.Role.EDITOR)
 
     assert editor.is_editor
     assert not editor.is_admin

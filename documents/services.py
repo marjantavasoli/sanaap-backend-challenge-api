@@ -58,12 +58,8 @@ class DocumentService:
         """
         Record the audit entry and broadcast the notification as a pair.
         """
-        self._record_audit(
-            actor, action, document_id=document_id, document_title=title
-        )
-        notify_document_event(
-            event, document_id=document_id, title=title, status=status
-        )
+        self._record_audit(actor, action, document_id=document_id, document_title=title)
+        notify_document_event(event, document_id=document_id, title=title, status=status)
 
     def _record_audit(self, actor, action, *, document=None, document_id=None, document_title=""):
         """

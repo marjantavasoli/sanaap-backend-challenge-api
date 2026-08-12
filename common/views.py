@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 @extend_schema(
     responses={200: {"type": "object", "properties": {"status": {"type": "string"}}}},
-    description="Liveness probe. Returns `{\"status\": \"ok\"}` when the service is up.",
+    description='Liveness probe. Returns `{"status": "ok"}` when the service is up.',
 )
 @api_view(["GET"])
 @permission_classes([AllowAny])

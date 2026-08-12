@@ -9,8 +9,10 @@ service = DocumentService()
 @pytest.mark.django_db
 def test_handle_created_audits_with_actor(editor_user):
     document = Document.objects.create(
-        owner=editor_user, title="r.pdf",
-        file="documents/1/abc/r.pdf", status=Document.Status.PENDING,
+        owner=editor_user,
+        title="r.pdf",
+        file="documents/1/abc/r.pdf",
+        status=Document.Status.PENDING,
     )
 
     service.handle_created(document, editor_user)
@@ -33,8 +35,10 @@ def test_handle_deleted_records_without_instance(editor_user):
 @pytest.mark.django_db
 def test_mark_ready_does_not_write_audit(editor_user):
     document = Document.objects.create(
-        owner=editor_user, title="r.pdf",
-        file="documents/1/abc/r.pdf", status=Document.Status.READY,
+        owner=editor_user,
+        title="r.pdf",
+        file="documents/1/abc/r.pdf",
+        status=Document.Status.READY,
     )
 
     service.mark_ready(document)

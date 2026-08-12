@@ -1,12 +1,13 @@
 import pytest
+from channels.db import database_sync_to_async
 from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
+from rest_framework_simplejwt.tokens import AccessToken
 
 from accounts.models import User
+from common.websocket_authentication import JWTWebsocketAuthenticationMiddleware
 from documents.ws_notificatins import notify_document_event
 from documents.ws_routing import websocket_urlpatterns
-from common.websocket_authentication import JWTWebsocketAuthenticationMiddleware
-from rest_framework_simplejwt.tokens import AccessToken
 
 # Build the same middleware stack the ASGI app uses, so tests exercise auth.
 application = JWTWebsocketAuthenticationMiddleware(URLRouter(websocket_urlpatterns))
@@ -19,18 +20,15 @@ def token_for(user):
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
 async def test_authenticated_client_receives_document_event(settings):
-    settings.CHANNEL_LAYERS = {
-        "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
-    }
+    settings.CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
     user = await _make_user()
-    communicator = WebsocketCommunicator(
-        application, f"/ws/documents/?token={token_for(user)}"
-    )
+    communicator = WebsocketCommunicator(application, f"/ws/documents/?token={token_for(user)}")
     connected, _ = await communicator.connect()
     assert connected
 
     # Broadcast an event and confirm the socket receives it.
     from asgiref.sync import sync_to_async
+
     await sync_to_async(notify_document_event)(
         "ready", document_id=1, title="report.pdf", status="ready"
     )
@@ -44,18 +42,13 @@ async def test_authenticated_client_receives_document_event(settings):
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
 async def test_unauthenticated_client_is_rejected(settings):
-    settings.CHANNEL_LAYERS = {
-        "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
-    }
+    settings.CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
     communicator = WebsocketCommunicator(application, "/ws/documents/")  # no token
 
     connected, _ = await communicator.connect()
     assert connected is False
 
     await communicator.disconnect()
-
-
-from channels.db import database_sync_to_async
 
 
 @database_sync_to_async

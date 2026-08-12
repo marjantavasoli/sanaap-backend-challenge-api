@@ -29,16 +29,15 @@ class DocumentStorage(S3Storage):
 
         super().__init__(**kwargs)
 
-
     def presigned_put_url(self, name: str) -> str:
-        """Return a presigned PUT URL the client uses to upload directly.        """
-
+        """Return a presigned PUT URL the client uses to upload directly."""
 
         return self.connection.meta.client.generate_presigned_url(
             "put_object",
             Params={"Bucket": self.bucket_name, "Key": name},
             ExpiresIn=settings.DOCUMENT_URL_EXPIRY,
         )
+
 
 # A single shared instance. The model's FileField references it through the
 # callable below so the storage config is never baked into a migration.

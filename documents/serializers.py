@@ -32,8 +32,13 @@ class DocumentSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = [
-            "id", "status", "size", "content_type",
-            "owner", "created_at", "updated_at",
+            "id",
+            "status",
+            "size",
+            "content_type",
+            "owner",
+            "created_at",
+            "updated_at",
         ]
 
     def get_download_url(self, obj) -> str:
@@ -60,7 +65,6 @@ class DocumentSerializer(serializers.ModelSerializer):
         # Attach the presigned PUT URL for the response (not persisted).
         document._upload_url = document.file.storage.presigned_put_url(key)
         return document
-
 
 
 class AuditLogSerializer(serializers.ModelSerializer):
