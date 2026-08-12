@@ -47,13 +47,11 @@ class DocumentService:
 
     def mark_ready(self, document):
         # The upload finished processing; audit as CREATE (finalize) + notify.
-        self._emit(
-            AuditLog.Action.CREATE,
+        notify_document_event(
             "ready",
             document_id=document.id,
             title=document.title,
             status=document.status,
-            actor=None,
         )
 
     def _emit(self, action, event, *, document_id, title, status, actor):
