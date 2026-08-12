@@ -6,7 +6,7 @@ from common.permissions import DocumentAccessPolicy,IsAdmin
 from documents.filters import DocumentFilter
 from documents.models import AuditLog, Document
 from documents.serializers import DocumentSerializer,AuditLogSerializer
-from documents.services import record_document_audit
+from documents.services import DocumentService
 from documents.ws_notificatins import notify_document_event
 
 
@@ -21,56 +21,33 @@ class DocumentViewSet(viewsets.ModelViewSet):
     ordering_fields = ["created_at", "title"]
     ordering = ["-created_at"]
 
+    service = DocumentService()
+
     def get_queryset(self):
         return Document.objects.select_related("owner").all()
 
     def perform_create(self, serializer):
         document = serializer.save()
-        record_document_audit(
-            self.request.user, AuditLog.Action.CREATE, document=document
-        )
-        notify_document_event(
-            "created",
-            document_id=document.id,
-            title=document.title,
-            status=document.status,
-        )
+        self.service.handle_created(document, self.request.user)
 
     def perform_update(self, serializer):
         document = serializer.save()
-        record_document_audit(
-            self.request.user, AuditLog.Action.UPDATE, document=document
-        )
-        notify_document_event(
-            "updated",
-            document_id=document.id,
-            title=document.title,
-            status=document.status,
-        )
+        self.service.handle_updated(document, self.request.user)
 
     def perform_destroy(self, instance):
         document_id, title = instance.id, instance.title
         instance.file.delete(save=False)
         instance.delete()
-        record_document_audit(
-            self.request.user,
-            AuditLog.Action.DELETE,
-            document_id=document_id,
-            document_title=title,
-        )
-        notify_document_event("deleted", document_id=document_id, title=title)
+        self.service.handle_deleted(document_id, title, self.request.user)
 
     def retrieve(self, request, *args, **kwargs):
         response = super().retrieve(request, *args, **kwargs)
-        instance = self.get_object()
-        record_document_audit(
-            request.user, AuditLog.Action.RETRIEVE, document=instance
-        )
+        self.service.record_retrieve_access(request.user, self.get_object())
         return response
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
-        record_document_audit(request.user, AuditLog.Action.LIST)
+        self.service.record_list_access(request.user)
         return response
 
 
