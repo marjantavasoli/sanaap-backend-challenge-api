@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import unquote
 
 from django.conf import settings
 from rest_framework import status
@@ -22,7 +23,9 @@ logger = logging.getLogger(__name__)
 @permission_classes([AllowAny])
 def minio_upload_hook(request: Request) -> Response:
     """Receive MinIO ObjectCreated events and enqueue processing."""
-    provided = request.headers.get("X-Webhook-Key", "")
+    auth = request.headers.get("Authorization", "")
+    provided = auth.removeprefix("Bearer ").strip()
+    logger.exception(f"Minio Token: {provided}")
     if not settings.MINIO_WEBHOOK_KEY or provided != settings.MINIO_WEBHOOK_KEY:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
@@ -31,7 +34,7 @@ def minio_upload_hook(request: Request) -> Response:
     enqueued = 0
     for record in records:
         try:
-            key = record["s3"]["object"]["key"]
+            key = unquote(record["s3"]["object"]["key"])
         except (KeyError, TypeError):
             continue
 
