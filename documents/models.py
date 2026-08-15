@@ -1,12 +1,19 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 
 from documents.storages import get_document_storage
 
 
+def build_document_key(owner_id: int, filename: str) -> str:
+    """Single source of truth for a document's object key."""
+    return f"documents/{owner_id}/{uuid.uuid4()}/{filename}"
+
+
 def document_upload_path(instance, filename: str) -> str:
     """Namespace stored objects per owner to keep the bucket organized."""
-    return f"documents/{instance.owner_id}/{filename}"
+    return build_document_key(instance.owner_id, filename)
 
 
 class Document(models.Model):

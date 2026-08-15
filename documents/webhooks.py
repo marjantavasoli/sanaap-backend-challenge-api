@@ -2,6 +2,7 @@ import logging
 from urllib.parse import unquote
 
 from django.conf import settings
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.decorators import (
     api_view,
@@ -17,7 +18,7 @@ from documents.tasks import process_document
 
 logger = logging.getLogger(__name__)
 
-
+@extend_schema(exclude=True)
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])

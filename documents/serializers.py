@@ -2,7 +2,7 @@ import uuid
 
 from rest_framework import serializers
 
-from documents.models import AuditLog, Document
+from documents.models import AuditLog, Document, build_document_key
 
 
 class DocumentSerializer(serializers.ModelSerializer):
@@ -54,7 +54,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         # Namespace the key by owner so the webhook can recover ownership,
         # and add a uuid so keys are unique and unguessable.
         filename = validated_data["title"]
-        key = f"documents/{owner.id}/{uuid.uuid4()}/{filename}"
+        key = build_document_key(owner.id, filename)
 
         document = Document.objects.create(
             owner=owner,
