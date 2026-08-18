@@ -26,7 +26,7 @@ def test_webhook_enqueues_and_marks_ready(api_client, editor_user):
         reverse("minio-upload-hook"),
         data=s3_event("documents/1/abc/r.pdf"),
         format="json",
-        HTTP_X_WEBHOOK_KEY=WEBHOOK_KEY,
+        HTTP_Authorization=f'Bearer {WEBHOOK_KEY}'
     )
 
     assert response.status_code == 200
@@ -42,7 +42,7 @@ def test_webhook_rejects_bad_key(api_client):
         reverse("minio-upload-hook"),
         data=s3_event("documents/1/abc/r.pdf"),
         format="json",
-        HTTP_X_WEBHOOK_KEY="wrong-key",
+        HTTP_Authorization='Bearer wrong-key'
     )
 
     assert response.status_code == 401
@@ -55,7 +55,7 @@ def test_webhook_unknown_key_enqueues_nothing(api_client):
         reverse("minio-upload-hook"),
         data=s3_event("documents/1/abc/missing.pdf"),
         format="json",
-        HTTP_X_WEBHOOK_KEY=WEBHOOK_KEY,
+        HTTP_Authorization=f'Bearer {WEBHOOK_KEY}'
     )
 
     assert response.status_code == 200

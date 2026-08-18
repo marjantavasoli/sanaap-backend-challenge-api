@@ -26,7 +26,6 @@ def minio_upload_hook(request: Request) -> Response:
     """Receive MinIO ObjectCreated events and enqueue processing."""
     auth = request.headers.get("Authorization", "")
     provided = auth.removeprefix("Bearer ").strip()
-    logger.exception(f"Minio Token: {provided}")
     if not settings.MINIO_WEBHOOK_KEY or provided != settings.MINIO_WEBHOOK_KEY:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 

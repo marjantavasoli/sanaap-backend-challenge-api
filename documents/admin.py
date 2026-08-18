@@ -1,13 +1,6 @@
 from django.contrib import admin
 
-from documents.models import AuditLog, Document
-
-
-@admin.register(Document)
-class DocumentAdmin(admin.ModelAdmin):
-    list_display = ("title", "owner", "created_at", "updated_at")
-    list_filter = ("created_at",)
-    search_fields = ("title", "owner__username")
+from documents.models import AuditLog
 
 
 @admin.register(AuditLog)

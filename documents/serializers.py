@@ -1,5 +1,3 @@
-import uuid
-
 from rest_framework import serializers
 
 from documents.models import AuditLog, Document, build_document_key

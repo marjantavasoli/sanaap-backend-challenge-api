@@ -12,7 +12,7 @@ class CustomUserAdmin(UserAdmin):
     without needing a separate user-management API.
     """
 
-    list_display = ("username", "email", "role", "is_staff", "is_active")
+    list_display = ("username", "email", "role", "is_active")
     list_filter = ("role", "is_staff", "is_active")
 
     fieldsets = UserAdmin.fieldsets + (("Role", {"fields": ("role",)}),)

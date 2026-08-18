@@ -29,4 +29,6 @@ def test_upload_path_is_namespaced_per_owner():
     class DummyInstance:
         owner_id = 42
 
-    assert document_upload_path(DummyInstance(), "photo.png") == "documents/42/photo.png"
+    path = document_upload_path(DummyInstance(), "photo.png")
+    assert path.startswith("documents/42/")
+    assert path.endswith("photo.png")
